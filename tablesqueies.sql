@@ -86,7 +86,7 @@ select * from users;
 --     force_password_change TINYINT(1) DEFAULT 1,
 
 
-
+insert into users(first_name,last_name,email,password_hash,role_id) values ("John","Driver","john.driver@fleet.com","sdsz",2)
 
 
 
