@@ -3,8 +3,8 @@ const bcrypt = require('bcryptjs');
 const pool = require('../config/db.config'); 
 
 (async () => {
-    const adminEmail = 'rida@carkeyper.com'; 
-    const adminPassword = 'TemporaryAdminPassword123!'; 
+    const adminEmail = 'iqra@carkeyper.com'; 
+    const adminPassword = 'Temp123!'; 
     const roleIdAdmin = 1; 
     
     console.log(`Starting Admin seed for: ${adminEmail}`);

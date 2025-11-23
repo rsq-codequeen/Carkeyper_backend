@@ -4,7 +4,7 @@ class UserService{
     async findByEmail(email) {
         const query = `
             SELECT 
-                user_id, first_name, last_name, email, password_hash, role_id, is_active, force_password_change 
+                user_id, first_name, last_name, email,contact_number, password_hash, role_id, is_active, force_password_change 
             FROM Users 
             WHERE email = ?;
         `;
@@ -18,23 +18,24 @@ class UserService{
     const tempPassword = Math.random().toString(36).substring(2, 12); 
     const passwordHash = await bcrypt.hash(tempPassword, 10);
     
-    const { first_name, last_name, email, role_id } = userData;
+    const { first_name, last_name, email,contact_number ,role_id } = userData;
     
     // FIX: The query now has 7 placeholders, corresponding to the 7 columns.
     const query = `
         INSERT INTO Users 
-        (first_name, last_name, email, password_hash, role_id, is_active, force_password_change)
-        VALUES (?, ?, ?, ?, ?, ?, ?);
+        (first_name, last_name, email,contact_number, password_hash, role_id, is_active, force_password_change)
+        VALUES (?, ?, ?, ?, ?, ?, ?,?);
     `;
     
     try {
         console.log('Executing query with values:', [
-            first_name, last_name, email, passwordHash, role_id, 1, 1
+            first_name, last_name, email,contact_number, passwordHash, role_id, 1, 1
         ]); // Debug log
         const [result] = await pool.query(query, [
             first_name, 
             last_name, 
             email, 
+            contact_number,
             passwordHash, 
             role_id,
             1, 
@@ -57,10 +58,11 @@ class UserService{
 
     async findAll() {
         const query = `
-            SELECT u.user_id, u.first_name, u.last_name, u.email, r.role_name, u.is_active
+            SELECT u.user_id, u.first_name, u.last_name, u.email,u.contact_number, r.role_name, u.is_active
             FROM Users u
             JOIN Roles r ON u.role_id = r.role_id
-            ORDER BY u.user_id;
+            ORDER BY u.user_id
+            ;
         `;
         const [rows] = await pool.query(query);
         return rows;
@@ -71,7 +73,7 @@ class UserService{
         const updateValues = [];
 
         // Define a list of allowed, updatable fields
-        const allowedFields = ['first_name', 'last_name', 'email', 'role_id', 'is_active', 'force_password_change'];
+        const allowedFields = ['first_name', 'last_name', 'email','contact_number', 'role_id', 'is_active', 'force_password_change'];
 
         for (const field of allowedFields) {
             if (userData[field] !== undefined) {

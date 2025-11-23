@@ -3,12 +3,28 @@
 const UserService = require('../models/user.service'); 
 
 class UserController {
-    
     // Handles GET /api/users
     // Fetches a list of all users for the Admin dashboard.
     async getAllUsers(req, res) {
         try {
-            const users = await UserService.findAll();
+            const usersFromDb = await UserService.findAll();
+            const users = usersFromDb.map(user => ({
+            // Combine first_name and last_name into 'name'
+            name: `${user.first_name} ${user.last_name}`, 
+            email: user.email,
+            // Assuming your SQL SELECT is aliasing role_name as 'role'
+            role: user.role_name, 
+            
+            // Add other fields needed by the frontend, even if empty/null
+            // We need to fix contact next, but for now:
+            contact: user.contact_number || 'N/A', // Placeholder until DB fixed
+            assignedVehicles: user.assigned_vehicles || 'None', 
+            
+            // Pass all original fields needed for edit/delete (like IDs)
+            id: user.user_id,
+            ...user 
+        }));
+            
             res.status(200).send(users);
         } catch (error) {
             console.error('Error fetching all users:', error);
@@ -17,7 +33,7 @@ class UserController {
     }
 
     // Handles POST /api/users
-    // Creates a new user with a temporary password (Admin function).
+    // Create a new user with a temporary password (Admin function).
     async createUser(req, res) {
         const userData = req.body;
         

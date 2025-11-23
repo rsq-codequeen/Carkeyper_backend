@@ -67,7 +67,7 @@ CREATE TABLE Checklist_Items (
 );
 
 --   SELECT User, Host FROM mysql.user;
---         SHOW GLOBAL VARIABLES LIKE 'port';
+--   SHOW GLOBAL VARIABLES LIKE 'port';
 
 insert into Roles (role_name) values 
 ('Admin'),
@@ -75,7 +75,8 @@ insert into Roles (role_name) values
 ('Mechanic');
 
 select * from roles;
-select * from users;
+select * from users ;
+select * from vehicles;
 --     user_id INT PRIMARY KEY AUTO_INCREMENT,
 --     first_name VARCHAR(100) NOT NULL,
 --     last_name VARCHAR(100) NOT NULL,
@@ -87,9 +88,3 @@ select * from users;
 
 
 insert into users(first_name,last_name,email,password_hash,role_id) values ("John","Driver","john.driver@fleet.com","sdsz",2)
-
-
-
-
-
-
