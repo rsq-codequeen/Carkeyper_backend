@@ -2,7 +2,6 @@
 const pool = require('../config/db.config'); // Ensure this is imported
 
 class VehicleService {
-    
     // --- CREATE ---
     async create(vehicleData) {
         // Based on your schema: registration_number, type, color, make, fueltype, transmission, model

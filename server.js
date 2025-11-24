@@ -7,7 +7,7 @@ const authRoutes = require('./routes/auth.routes');
 const vehicleRoutes= require('./routes/vehicle.routes')
 app.use(express.json());
 const userRoutes=require('./routes/user.routes');
-
+const checklistRoutes = require('./routes/checklist.routes');
 // Angular port
 const clientOrigin = 'http://localhost:4200';
 
@@ -29,6 +29,8 @@ app.get('/',(req,res)=>{
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/vehicles', vehicleRoutes);
+app.use('/api', checklistRoutes);
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
