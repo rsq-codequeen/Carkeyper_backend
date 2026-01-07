@@ -1,7 +1,7 @@
 // controllers/user.controller.js
 
 const UserService = require('../models/user.service'); 
-
+const EmailService=require('../utilities/email.service')
 class UserController {
     // Handles GET /api/users
     // Fetches a list of all users for the Admin dashboard.
@@ -48,6 +48,7 @@ class UserController {
         }
 
         try {
+            
             // Check for duplicate email
             const existingUser = await UserService.findByEmail(userData.email);
             if (existingUser) {
@@ -58,7 +59,22 @@ class UserController {
 
             // Create user
             const result = await UserService.create(userData);
-            
+            console.log("------------------------------------------");
+        console.log("NEW USER CREATED:");
+        console.log("Email:", userData.email);
+        console.log("Temporary Password:", result.temporaryPassword); 
+        console.log("------------------------------------------");
+        try {
+            await EmailService.sendTempPasswordEmail(
+                userData.email, 
+                result.temporaryPassword, 
+                userData.first_name
+            );
+            console.log(`✓ Welcome email sent to: ${userData.email}`);
+        } catch (emailError) {
+            // We log the error but still return 201 because the user exists in DB
+            console.error('⚠ Email Service Error:', emailError.message);
+        }
             // Proper success response with 201 status
             return res.status(201).send({ 
                 message: 'User created successfully.',
@@ -77,21 +93,34 @@ class UserController {
 
     // Handles PUT /api/users/:id (e.g., changing role, toggling active status)
     async updateUser(req, res) {
-        const userId = req.params.id;
-        const updateData = req.body;
-        
-        try {
-            const result = await UserService.update(userId, updateData); // <-- New Service Call
-            
-            if (result.affectedRows === 0) {
-                 return res.status(404).send({ message: `User ${userId} not found or no changes made.` });
-            }
-            
-            res.status(200).send({ message: `User ${userId} updated successfully.` });
-        } catch (error) {
-           // ...
+    const targetUserId = req.params.id;
+    const updateData = req.body;
+    
+    // req.userId is usually set by your verifyToken middleware
+    const authenticatedUserId = req.userId; 
+    const authenticatedUserRole = req.userRole; // Or however your middleware stores role
+
+    try {
+        // SECURITY CHECK
+        // If the user is NOT an admin AND is trying to update someone else's ID...
+        if (authenticatedUserRole !== 1 && authenticatedUserId != targetUserId) {
+            return res.status(403).send({ 
+                message: "Forbidden: You can only update your own profile." 
+            });
         }
+
+        const result = await UserService.update(targetUserId, updateData);
+        
+        if (result.affectedRows === 0) {
+             return res.status(404).send({ message: `User ${targetUserId} not found or no changes made.` });
+        }
+        
+        res.status(200).send({ message: `User ${targetUserId} updated successfully.` });
+    } catch (error) {
+        console.error("Update Controller Error:", error);
+        res.status(500).send({ message: "Internal server error during update." });
     }
+}
 
     // Handles DELETE /api/users/:id (Soft delete/Deactivate)
     async deactivateUser(req, res) {

@@ -17,6 +17,8 @@ class AuthController {
                 return res.status(401).send({ message: 'Invalid credentials.' });
             }
 
+        
+        
             const passwordIsValid = bcrypt.compareSync(password, user.password_hash);
             if (!passwordIsValid) {
                 return res.status(401).send({ message: 'Invalid credentials.' });

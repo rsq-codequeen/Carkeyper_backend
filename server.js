@@ -1,38 +1,82 @@
 const express = require('express');
-const app = express();
+const http = require('http'); // Required for Socket.io
+const { Server } = require('socket.io'); // Socket.io library
 require('dotenv').config();
 const cors = require('cors');
 
+const app = express();
+const server = http.createServer(app); // Create HTTP server from Express app
+
+// Import Routes
 const authRoutes = require('./routes/auth.routes');
-const vehicleRoutes= require('./routes/vehicle.routes')
-app.use(express.json());
-const userRoutes=require('./routes/user.routes');
+const vehicleRoutes = require('./routes/vehicle.routes');
+const userRoutes = require('./routes/user.routes');
 const checklistRoutes = require('./routes/checklist.routes');
-// Angular port
-const clientOrigin = 'http://localhost:4200';
+const messageRoutes = require('./routes/message.routes'); // New Chat Routes
+
+// CORS Configuration
+const allowedOrigins = [
+  'http://localhost:4200',
+  'http://127.0.0.1:5500',
+  'http://localhost:5500'
+];
 
 const corsOptions = {
-  origin: clientOrigin,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow these methods
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-access-token'], // Crucial for JWTs
-  credentials: true // Allow cookies/authorization headers
+  origin: allowedOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Added OPTIONS
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-access-token'], // Must include x-access-token
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 app.use(cors(corsOptions));
-// Middleware for URL-encoded bodies (less common for APIs, but good practice)
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/',(req,res)=>{
-    res.json({ message: 'Welcome to the CarKeyper Node.js API.' })
+// --- SOCKET.IO INTEGRATION ---
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:4200", "http://127.0.0.1:5500"],
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+io.on('connection', (socket) => {
+  console.log('User connected to socket:', socket.id);
+
+  // User joins a private room based on their ID
+  socket.on('join_room', (userId) => {
+    socket.join(`user_${userId}`);
+    console.log(`User ID ${userId} joined room: user_${userId}`);
+  });
+
+  // Handle sending private messages
+  socket.on('send_private_message', (data) => {
+    // data = { senderId, receiverId, message }
+    io.to(`user_${data.receiverId}`).emit('receive_private_message', data);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected from socket');
+  });
 });
 
-//ROUTE INTEGRATION (The MVC Link)
+// --- ROUTE INTEGRATION ---
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to the CarKeyper Node.js API.' });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api', checklistRoutes);
+app.use('/api/messages', messageRoutes); // New Chat API Endpoints
 
+// --- START SERVER ---
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}.`);
-    console.log('API endpoints are now accessible.');
+
+// Use server.listen instead of app.listen to support WebSockets
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}.`);
+  console.log('Socket.io is enabled and API endpoints are accessible.');
 });

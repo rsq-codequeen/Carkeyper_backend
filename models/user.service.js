@@ -11,48 +11,45 @@ class UserService{
         const [rows] = await pool.query(query, [email]);
         return rows[0];
     }
-   async create(userData) {
-        console.log('Creating user with data:', userData); // Debug log
-    
-    // Generate secure temporary password and hash it
-    const tempPassword = Math.random().toString(36).substring(2, 12); 
-    const passwordHash = await bcrypt.hash(tempPassword, 10);
-    
-    const { first_name, last_name, email,contact_number ,role_id } = userData;
-    
-    // FIX: The query now has 7 placeholders, corresponding to the 7 columns.
-    const query = `
-        INSERT INTO Users 
-        (first_name, last_name, email,contact_number, password_hash, role_id, is_active, force_password_change)
-        VALUES (?, ?, ?, ?, ?, ?, ?,?);
-    `;
-    
+    async create(userData) {
+    const connection = await pool.getConnection();
     try {
-        console.log('Executing query with values:', [
-            first_name, last_name, email,contact_number, passwordHash, role_id, 1, 1
-        ]); // Debug log
-        const [result] = await pool.query(query, [
-            first_name, 
-            last_name, 
-            email, 
-            contact_number,
-            passwordHash, 
-            role_id,
-            1, 
-            1
-        ]);
+        await connection.beginTransaction();
+
+        const tempPassword = Math.random().toString(36).substring(2, 12);
+        const passwordHash = await bcrypt.hash(tempPassword, 10);
+
+        const { first_name, last_name, email, contact_number, role_id } = userData;
+
+        const query = `
+            INSERT INTO Users 
+            (first_name, last_name, email, contact_number, password_hash, role_id, is_active, force_password_change)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+        `;
         
-        console.log('Query result:', result); // Debug log
+        // Ensure this variable is named 'result'
+        const [result] = await connection.query(query, [
+            first_name, last_name, email, contact_number, passwordHash, role_id, 1, 1
+        ]);
+
+        // Audit Log
+        await connection.query(
+            `INSERT INTO Audit_Logs (timestamp, user_id, action_type, details) VALUES (NOW(), ?, ?, ?)`,
+            [null, 'USER_CREATION', `Created user ${email}`]
+        );
+
+        await connection.commit();
+
+        // result.insertId is now accessible because 'result' was defined above
         return {
             userId: result.insertId,
             temporaryPassword: tempPassword
         };
-    } catch (dbError) {
-       console.error('--- FATAL SQL INSERT ERROR ---');
-    console.error('Code:', dbError.code); // Look for codes like 'ER_NO_REFERENCED_ROW_2'
-    console.error('Message:', dbError.message);
-    console.error('----------------------------');
-    throw dbError;
+    } catch (error) {
+        await connection.rollback();
+        throw error; // This sends the error to user.controller.js
+    } finally {
+        connection.release();
     }
 }
 
@@ -72,6 +69,15 @@ class UserService{
         const updateFields = [];
         const updateValues = [];
 
+        if (userData.password) {
+        // Hash the password before it touches the database
+        const salt = await bcrypt.genSalt(10);
+        const hashed = await bcrypt.hash(userData.password, salt);
+        
+        // Add the hash to our update arrays
+        updateFields.push(`password_hash = ?`);
+        updateValues.push(hashed);
+    }
         // Define a list of allowed, updatable fields
         const allowedFields = ['first_name', 'last_name', 'email','contact_number', 'role_id', 'is_active', 'force_password_change'];
 

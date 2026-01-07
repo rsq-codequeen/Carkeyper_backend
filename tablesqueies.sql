@@ -45,27 +45,21 @@ CREATE TABLE Vehicle_Assignments (
 );
 CREATE TABLE Checklist_Templates (
     template_id INT PRIMARY KEY AUTO_INCREMENT,
-    template_name VARCHAR(100) NOT NULL,
-    is_active TINYINT(1) DEFAULT 1
-);
-CREATE TABLE Checklist_Sections (
-    section_id INT PRIMARY KEY AUTO_INCREMENT,
-    template_id INT NOT NULL,
-    section_name VARCHAR(100) NOT NULL,
-    sort_order INT,
-    -- Foreign Key Constraint
-    FOREIGN KEY (template_id) REFERENCES Checklist_Templates(template_id)
+    title VARCHAR(100) NOT NULL,
+    description VARCHAR(255),
+    assigned_vehicle VARCHAR(100) NOT NULL,
+    checklist_time VARCHAR(20) NOT NULL
 );
 CREATE TABLE Checklist_Items (
     item_id INT PRIMARY KEY AUTO_INCREMENT,
-    section_id INT NOT NULL,
+    template_id INT NOT NULL,
     item_text VARCHAR(255) NOT NULL,
-    requires_ok TINYINT(1) DEFAULT 1,
     sort_order INT,
-    -- Foreign Key Constraint
-    FOREIGN KEY (section_id) REFERENCES Checklist_Sections(section_id)
+    requires_ok TINYINT(1) DEFAULT 1,
+    FOREIGN KEY (template_id) 
+        REFERENCES Checklist_Templates(template_id)
+        ON DELETE CASCADE  
 );
-
 --   SELECT User, Host FROM mysql.user;
 --   SHOW GLOBAL VARIABLES LIKE 'port';
 
@@ -76,7 +70,9 @@ insert into Roles (role_name) values
 
 select * from roles;
 select * from users ;
-select * from vehicles;
+select * from vehicles;           
+select * from Checklist_Templates;
+select * from Checklist_Items;
 --     user_id INT PRIMARY KEY AUTO_INCREMENT,
 --     first_name VARCHAR(100) NOT NULL,
 --     last_name VARCHAR(100) NOT NULL,
@@ -87,4 +83,21 @@ select * from vehicles;
 --     force_password_change TINYINT(1) DEFAULT 1,
 
 
-insert into users(first_name,last_name,email,password_hash,role_id) values ("John","Driver","john.driver@fleet.com","sdsz",2)
+insert into users(first_name,last_name,email,password_hash,role_id) values ("John","Driver","john.driver@fleet.com","sdsz",2);
+
+CREATE TABLE Messages (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    sender_id INT NOT NULL,
+    receiver_id INT NOT NULL,
+    message_text TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    -- Reference 'user_id' specifically
+    FOREIGN KEY (sender_id) REFERENCES Users(user_id),
+    FOREIGN KEY (receiver_id) REFERENCES Users(user_id)
+) ENGINE=InnoDB;
+
+-- Replace '1' with your Admin ID and '2' with an existing Driver's User ID
+INSERT INTO Messages (sender_id, receiver_id, message_text, created_at) 
+VALUES 
+(16, 35, 'Hello Admin, I have finished my checklist.', NOW()),
+(16, 35, 'Great, thank you! I will review it now.', NOW());
