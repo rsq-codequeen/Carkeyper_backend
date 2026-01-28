@@ -73,3 +73,28 @@ class ChecklistController {
     }
 }
 module.exports = new ChecklistController();
+
+const { Worker } = require('worker_threads');
+const path = require('path');
+
+exports.exportBatchReports = (req, res) => {
+    const { checklistIds } = req.body; // Array of IDs to process
+
+    // 1. Offload the heavy work to a background thread
+    const worker = new Worker(path.resolve(__dirname, '../workers/reportGenerator.js'), {
+        workerData: checklistIds 
+    });
+
+    worker.on('message', (reports) => {
+        // 2. Once the thread finishes, send the response
+        res.status(200).json({
+            message: "Batch processing complete",
+            totalFiles: reports.length,
+            files: reports
+        });
+    });
+
+    worker.on('error', (err) => {
+        res.status(500).json({ error: "Background processing failed" });
+    });
+};

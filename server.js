@@ -80,3 +80,5 @@ server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
   console.log('Socket.io is enabled and API endpoints are accessible.');
 });
+// At the very end of server.js
+module.exports = app;

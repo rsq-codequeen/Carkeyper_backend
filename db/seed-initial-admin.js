@@ -36,7 +36,7 @@ const pool = require('../config/db.config');
 
         
         await pool.query(query, [adminEmail, hashed_password, roleIdAdmin]);
-        // await pool.query(query, [first_name,user_id, roleIdAdmin]);
+        
         console.log('✅ Admin user successfully seeded.');
         console.log(`Initial Admin Password: ${adminPassword}`);
         
