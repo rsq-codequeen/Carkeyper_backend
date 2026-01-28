@@ -75,7 +75,7 @@ app.use('/api', checklistRoutes);
 app.use('/api/messages', messageRoutes); // New Chat API Endpoints
 app.use('/api/intakes', intakeRoutes);
 // --- START SERVER ---
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 80;
 
 // Use server.listen instead of app.listen to support WebSockets
 server.listen(PORT, '0.0.0.0',() => {
