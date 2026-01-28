@@ -13,7 +13,7 @@ const vehicleRoutes = require('./routes/vehicle.routes');
 const userRoutes = require('./routes/user.routes');
 const checklistRoutes = require('./routes/checklist.routes');
 const messageRoutes = require('./routes/message.routes'); // New Chat Routes
-
+const intakeRoutes = require('./routes/intake.routes');
 // CORS Configuration
 const allowedOrigins = [
   'http://localhost:4200',
@@ -71,7 +71,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api', checklistRoutes);
 app.use('/api/messages', messageRoutes); // New Chat API Endpoints
-
+app.use('/api/intakes', intakeRoutes);
 // --- START SERVER ---
 const PORT = process.env.PORT || 8080;
 

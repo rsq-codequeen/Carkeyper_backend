@@ -13,5 +13,5 @@ router.post('/', [verifyToken, isAdmin], userController.createUser);
 router.put('/:id', [verifyToken], userController.updateUser);
 
 router.delete('/:id', [verifyToken, isAdmin], userController.deactivateUser);
-
+router.post('/:id/assign-vehicle', [verifyToken, isAdmin], userController.assignVehicle);
 module.exports = router;

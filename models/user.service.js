@@ -53,17 +53,62 @@ class UserService{
     }
 }
 
-    async findAll() {
-        const query = `
-            SELECT u.user_id, u.first_name, u.last_name, u.email,u.contact_number, r.role_name, u.is_active
-            FROM Users u
-            JOIN Roles r ON u.role_id = r.role_id
-            ORDER BY u.user_id
-            ;
-        `;
-        const [rows] = await pool.query(query);
-        return rows;
+    // Inside UserService class in user.service.js
+
+async findAll() {
+    const query = `
+        SELECT 
+            u.user_id, 
+            u.first_name, 
+            u.last_name, 
+            u.email, 
+            u.contact_number, 
+            r.role_name, 
+            u.is_active,
+            v.model AS assigned_vehicle_model,
+            v.registration_number AS assigned_vehicle_plate,
+            va.start_date AS assignment_start_date
+        FROM Users u
+        JOIN Roles r ON u.role_id = r.role_id
+        -- This join finds the current assignment
+        LEFT JOIN Vehicle_Assignments va ON u.user_id = va.driver_id AND va.end_date IS NULL
+        -- This join gets the vehicle details for that assignment
+        LEFT JOIN Vehicles v ON va.vehicle_id = v.vehicle_id
+        ORDER BY u.user_id;
+    `;
+    const [rows] = await pool.query(query);
+    return rows;
+}
+async assignVehicle(userId, vehicleId) {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // 1. Close any existing active assignment for THIS vehicle
+        await connection.query(
+            `UPDATE Vehicle_Assignments SET end_date = NOW() WHERE vehicle_id = ? AND end_date IS NULL`,
+            [vehicleId]
+        );
+
+        // 2. Close any existing active assignment for THIS user (User can't drive two cars)
+        await connection.query(
+            `UPDATE Vehicle_Assignments SET end_date = NOW() WHERE driver_id = ? AND end_date IS NULL`,
+            [userId]
+        );
+
+        // 3. Create the new assignment record
+        const query = `INSERT INTO Vehicle_Assignments (vehicle_id, driver_id, start_date) VALUES (?, ?, NOW())`;
+        await connection.query(query, [vehicleId, userId]);
+
+        await connection.commit();
+        return { success: true };
+    } catch (error) {
+        await connection.rollback();
+        throw error;
+    } finally {
+        connection.release();
     }
+}
     async update(userId, userData) {
         // Build the query dynamically for robust updates
         const updateFields = [];
