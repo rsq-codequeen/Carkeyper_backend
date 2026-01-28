@@ -25,10 +25,10 @@ const pool = require('../config/db.config');
         const hashed_password = await bcrypt.hash(adminPassword, 10);
         
       
-        // const query = `
-        //     INSERT INTO Users(first_name, last_name, email, password_hash, role_id, is_active, force_password_change) 
-        //     VALUES ('Iqra', 'Basharat', ?, ?, ?, 1, 1);
-        // `;
+        const query = `
+            INSERT INTO Users(first_name, last_name, email, password_hash, role_id, is_active, force_password_change) 
+            VALUES ('Iqra', 'Basharat', ?, ?, ?, 1, 1);
+        `;
 
         // const query = `
         //     UPDATE  Users set first_name=rida where user_id=27
