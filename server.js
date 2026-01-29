@@ -72,15 +72,14 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api', checklistRoutes);
-app.use('/api/messages', messageRoutes); // New Chat API Endpoints
+app.use('/api/messages', messageRoutes); 
 app.use('/api/intakes', intakeRoutes);
-// --- START SERVER ---
-const PORT = process.env.PORT || 80;
 
-// Use server.listen instead of app.listen to support WebSockets
+const PORT = process.env.PORT || 10000;
+
 server.listen(PORT, '0.0.0.0',() => {
   console.log(`Server is running on port ${PORT}.`);
   console.log('Socket.io is enabled and API endpoints are accessible.');
 });
-// At the very end of server.js
+
 module.exports = app;
