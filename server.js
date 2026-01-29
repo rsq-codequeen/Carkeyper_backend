@@ -75,11 +75,11 @@ app.use('/api', checklistRoutes);
 app.use('/api/messages', messageRoutes); 
 app.use('/api/intakes', intakeRoutes);
 
-const PORT = process.env.PORT || 10000;
-
-server.listen(PORT, '0.0.0.0',() => {
-  console.log(`Server is running on port ${PORT}.`);
-  console.log('Socket.io is enabled and API endpoints are accessible.');
-});
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 8080;
+  server.listen(PORT, () => {
+    console.log(`Local server running on port ${PORT}`);
+  });
+}
 
 module.exports = app;
